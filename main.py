@@ -36,7 +36,15 @@ def print_board(board):
     for row in range(ROWS):
         row_str = "| "
         for col in range(COLS):
-            row_str += f"{board[row][col]} "
+            if board[row][col] == "R":
+                # Red emoji
+                row_str += "🔴"
+            elif board[row][col] == "Y":
+                # Yellow emoji
+                row_str += "🟡"
+            else:
+                row_str += f"{board[row][col]} "
+            
         row_str += "|"
         print(row_str)
     print("  " + " ".join(str(i+1) for i in range(COLS)) + "\n")
@@ -297,7 +305,14 @@ def main():
             
             col = ai_move(board, ai_player)
             board = make_move(board, col, ai_player)
-            print(f"AI ({ai_player}) plays column {col+1}.\n")
+            if ai_player == "R":
+                # print red emoji
+                print(f"AI 🔴 plays column {col+1}.\n")
+            else:
+                # print yellow emoji
+                print(f"AI 🟡 plays column {col+1}.\n")
+                
+            # print(f"AI ({ai_player}) plays column {col+1}.\n")
             print_board(board)
             
             if check_winner(board, ai_player):
