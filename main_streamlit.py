@@ -292,156 +292,6 @@ def reset_game_state():
     st.session_state.ai_player = None
     st.session_state.current_player = None
 
-# def main(col1, col2):
-
-#     # Initialize session state on first run
-#     if "board" not in st.session_state:
-#         reset_game_state()
-
-#     # Allow user to reset the game at any point
-#     with col1:
-#       if st.button("Reset Game"):
-#           reset_game_state()
-
-#     # -------------------------------------------------------------------------
-#     # 1) If the user hasn't chosen who goes first yet, ask them
-#     # -------------------------------------------------------------------------
-#     with col1:
-#       if not st.session_state.first_choice_made:            
-#           choice = st.radio("Do you want to go first?", ("Yes", "No"))
-#           if st.button("Start Game"):
-#               st.session_state.first_choice_made = True
-#               if choice == "Yes":
-#                   st.session_state.human_player = "R"
-#                   st.session_state.ai_player = "Y"
-#                   st.session_state.current_player = "R"
-#               else:
-#                   st.session_state.human_player = "Y"
-#                   st.session_state.ai_player = "R"
-#                   # If user picks "No," that means the AI is Red and goes first
-#                   st.session_state.current_player = "R"
-#           else:
-#               st.stop()
-
-#     # -------------------------------------------------------------------------
-#     # 2) Display current board state
-#     # -------------------------------------------------------------------------
-#     board = st.session_state.board
-#     display_board(board, col1)
-
-#     if st.session_state.game_over:
-#         if st.session_state.winner == "Human":
-#             st.success("You win! Congratulations!")
-#         elif st.session_state.winner == "AI":
-#             st.error("AI wins! Better luck next time.")
-#         else:
-#             st.warning("It's a draw!")
-#         st.stop()  # Stop execution here, do not show anything else.
-
-#     # -------------------------------------------------------------------------
-#     # 3) Handle the current turn
-#     # -------------------------------------------------------------------------
-#     current_player = st.session_state.current_player
-#     human_player = st.session_state.human_player
-#     ai_player = st.session_state.ai_player
-
-#     # Check if the board is already full or if there's a winner (edge cases)
-#     if is_board_full(board):
-#         st.session_state.game_over = True
-#         st.session_state.winner = None
-#         st.warning("It's a draw!")
-#         st.stop()
-
-#     if check_winner(board, "R"):
-#         st.session_state.game_over = True
-#         # Figure out if human or AI is R
-#         if human_player == "R":
-#             st.session_state.winner = "Human"
-#         else:
-#             st.session_state.winner = "AI"
-#         st.rerun()
-
-#     if check_winner(board, "Y"):
-#         st.session_state.game_over = True
-#         # Figure out if human or AI is Y
-#         if human_player == "Y":
-#             st.session_state.winner = "Human"
-#         else:
-#             st.session_state.winner = "AI"
-#         st.rerun()
-
-#     # -------------------------------------------------------------------------
-#     # If it's human's turn, allow the user to pick a column
-#     # If it's AI's turn, compute the move automatically
-#     # -------------------------------------------------------------------------
-#     if current_player == human_player:
-#         with col1:
-#           if human_player == "R":
-#               st.markdown(f"**Your turn** 🔴: Choose a column:")
-#           else:
-#               st.markdown(f"**Your turn** 🟡: Choose a column:")
-#           # st.markdown(f"**Your turn** ({human_player}). Choose a column:")
-#         valid_moves = get_valid_moves(board)
-#         # Create buttons for each valid column
-#         columns = [str(c+1) for c in valid_moves]
-        
-#         with col1:
-#           # chosen_col = st.selectbox("Pick a column", columns, key="human_move_select")
-          
-#           chosen_col = st.number_input("Pick a column", min_value=1, max_value=7, value=1, step=1, key="human_move_select")
-          
-#           if st.button("Make Move"):
-#               col_index = int(chosen_col) - 1
-#               if col_index in valid_moves:
-#                   # Make the move
-#                   new_board = make_move(board, col_index, human_player)
-#                   st.session_state.board = new_board
-#                   # Check for win or draw
-#                   if check_winner(new_board, human_player):
-#                       st.session_state.game_over = True
-#                       st.session_state.winner = "Human"
-#                   elif is_board_full(new_board):
-#                       st.session_state.game_over = True
-#                       st.session_state.winner = None
-#                   else:
-#                       # Switch to AI
-#                       st.session_state.current_player = ai_player
-#                   st.rerun()
-#     else:
-#         # AI turn
-#         with col1:
-#           if ai_player == "R":
-#               st.markdown(f"**AI's turn** 🔴.")
-#           else:
-#               st.markdown(f"**AI's turn** 🟡.")
-#           # st.markdown(f"**AI's turn** ({ai_player}).")
-#         valid_moves = get_valid_moves(board)
-#         if not valid_moves:
-#             # It's a draw
-#             st.session_state.game_over = True
-#             st.session_state.winner = None
-#             st.rerun()
-#         else:
-#             # Perform the AI move
-#             col = ai_move(board, ai_player)
-#             new_board = make_move(board, col, ai_player)
-#             st.session_state.board = new_board
-
-#             # Check for win or draw
-#             if check_winner(new_board, ai_player):
-#                 st.session_state.game_over = True
-#                 st.session_state.winner = "AI"
-#             elif is_board_full(new_board):
-#                 st.session_state.game_over = True
-#                 st.session_state.winner = None
-#             else:
-#                 # Switch to human
-#                 st.session_state.current_player = human_player
-#             # Rerun to reflect changes
-#             st.rerun()
-
-
-
 def main(col1, col2, col3):
 
     # Initialize session state on first run
@@ -489,9 +339,10 @@ def main(col1, col2, col3):
 
         if st.session_state.game_over:
             if st.session_state.winner == "Human":
-                st.success("You win! Congratulations!")
+                st.success("You win! Congratulations!", icon="🎉")
+                st.balloons()
             elif st.session_state.winner == "AI":
-                st.error("AI wins! Better luck next time.")
+                st.error("AI wins! Better luck next time.", icon="😢")
             else:
                 st.warning("It's a draw!")
             st.stop()  # Stop execution here, do not show anything else.
