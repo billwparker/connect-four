@@ -244,7 +244,7 @@ def display_board(board, col1):
     """
     board_str = ""
     for row in range(ROWS):
-        row_str = "| "
+        row_str = "  "
         for col in range(COLS):
             val = board[row][col]
             if val == "R":
@@ -253,15 +253,15 @@ def display_board(board, col1):
                 row_str += "🟡 "
             else:
                 row_str += "⬜ "
-        row_str += "|<br>"
+        row_str += "<br>"
         board_str += row_str
 
     # Add column numbers at the bottom
     # board_str += "  " + " ".join(str(i + 1) for i in range(COLS))
     column_numbers = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣"]
-    board_str += "|    "
+    board_str += "  "
     board_str += "  " + " ".join(column_numbers)
-    board_str += "  |"
+    board_str += "  "
 
 
     # Use <pre> to preserve spacing and line breaks in a fixed-pitch font
@@ -335,13 +335,16 @@ def main(col1, col2, col3):
         display_board(board, col1)
 
         if st.session_state.game_over:
-            if st.session_state.winner == "Human":
-                st.success("You win! Congratulations!", icon="🎉")
-                st.balloons()
-            elif st.session_state.winner == "AI":
-                st.error("AI wins! Better luck next time.", icon="😢")
-            else:
-                st.warning("It's a draw!")
+            with col1:
+              if st.session_state.winner == "Human":
+                  st.success("You win! Congratulations!", icon="🎉")
+                  st.balloons()
+              elif st.session_state.winner == "AI":
+                  st.error("Computer wins! Better luck next time.", icon="😢")
+                  st.snow()
+              else:
+                  st.warning("It's a draw!")
+                
             st.stop()  # Stop execution here, do not show anything else.
 
         # -------------------------------------------------------------------------
@@ -446,8 +449,8 @@ if __name__ == "__main__":
     
     st.markdown(
         """
-        Connect Four game where you play against an AI.
-        The AI uses the Monte Carlo Tree Search (MCTS) algorithm to decide its moves.
+        Connect Four game where you play against the computer.
+        The computer uses the Monte Carlo Tree Search (MCTS) algorithm to decide its moves.
         """
     )
     
