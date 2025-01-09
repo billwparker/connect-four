@@ -1,11 +1,14 @@
-import math
 import copy
-import random
 import time
+import random
+import math
 
 ROWS = 6
 COLS = 7
 
+###############################################################################
+#                          MCTS Implementation                                #
+###############################################################################
 class MCTSNode:
     """
     A node in the MCTS search tree.
@@ -21,33 +24,14 @@ class MCTSNode:
     
     def uct_value(self):
         """
-        Upper Confidence Bound for Trees (UCT) to balance exploration & exploitation.
+        Upper Confidence Bound for Trees (UCT).
         """
         if self.visits == 0:
-            return float('inf')  # Encourage exploration of unvisited nodes
-        return self.wins / self.visits + 1.4142 * math.sqrt(
+            return float('inf')
+        return (self.wins / self.visits) + 1.4142 * math.sqrt(
             math.log(self.parent.visits) / self.visits
         )
 
-def print_board(board):
-    """
-    Print the Connect Four board in the desired format.
-    """
-    for row in range(ROWS):
-        row_str = "| "
-        for col in range(COLS):
-            if board[row][col] == "R":
-                # Red emoji
-                row_str += "🔴"
-            elif board[row][col] == "Y":
-                # Yellow emoji
-                row_str += "🟡"
-            else:
-                row_str += f"{board[row][col]} "
-            
-        row_str += "|"
-        print(row_str)
-    print("  " + " ".join(str(i+1) for i in range(COLS)) + "\n")
 
 def get_valid_moves(board):
     """
@@ -111,9 +95,15 @@ def check_winner(board, player):
     return False
 
 def get_next_player(current_player):
+    """
+    Switch from 'R' to 'Y' or vice versa.
+    """
     return "R" if current_player == "Y" else "Y"
 
 def is_board_full(board):
+    """
+    Check if the board is completely full (no moves can be made).
+    """
     return all(board[0][col] != "." for col in range(COLS))
 
 def simulate_game(board, current_player):
@@ -121,7 +111,6 @@ def simulate_game(board, current_player):
     Simulate a random game (rollout) until we get a winner or a draw.
     Returns 'R' if Red wins, 'Y' if Yellow wins, or None if draw.
     """
-    # Copy to avoid modifying the original board.
     sim_board = copy.deepcopy(board)
     sim_player = current_player
     
@@ -131,15 +120,14 @@ def simulate_game(board, current_player):
             # It's a draw
             return None
         
-        # Just pick a random move for simulation
+        # Random move
         col = random.choice(moves)
         sim_board = make_move(sim_board, col, sim_player)
         
-        # Check if we have a winner
+        # Check winner
         if check_winner(sim_board, sim_player):
             return sim_player
         
-        # Switch player
         sim_player = get_next_player(sim_player)
 
 def expand_node(node):
@@ -169,7 +157,6 @@ def best_child(node):
 def backpropagate(node, winner):
     """
     Backpropagate the simulation results up the tree.
-    If winner is None (draw), we do not count it as a win for anyone.
     """
     while node is not None:
         node.visits += 1
@@ -177,15 +164,13 @@ def backpropagate(node, winner):
         # we do an increment. Actually, if the *previous move* was from 
         # node.parent.current_player, we can track it differently.
         # But for simplicity, if winner == node.parent.current_player => node.parent gets credit.
-        if winner == get_next_player(node.current_player):
+        if winner is not None and winner == get_next_player(node.current_player):
             node.wins += 1
         node = node.parent
 
-def mcts(root_board, current_player, simulations=1000, time_limit=2.0):
+def mcts(root_board, current_player, simulations=500, time_limit=1.0):
     """
     Perform MCTS from the root state and return the column of the best move.
-    - simulations: number of rollouts we can run (upper bound).
-    - time_limit: time limit in seconds (alternative or in addition to simulations).
     """
     start_time = time.time()
     root_node = MCTSNode(root_board, current_player)
@@ -193,7 +178,7 @@ def mcts(root_board, current_player, simulations=1000, time_limit=2.0):
     while (time.time() - start_time) < time_limit:
         # 1. Selection
         node = root_node
-        while node.untried_moves == [] and node.children != []:
+        while not node.untried_moves and node.children:
             node = best_child(node)
         
         # 2. Expansion
@@ -207,124 +192,47 @@ def mcts(root_board, current_player, simulations=1000, time_limit=2.0):
         backpropagate(node, winner)
     
     # After time is up, pick the child with the highest visit count.
-    best_move = max(
-        root_node.children,
-        key=lambda c: c.visits
-    )
+    best_move_node = max(root_node.children, key=lambda c: c.visits) if root_node.children else None
     
-    # Figure out which column leads to best_move.board
+    if best_move_node is None:
+        # fallback if somehow no children
+        return random.choice(get_valid_moves(root_board))
+    
+    # Return the column that leads to best_move_node
     for col in get_valid_moves(root_board):
         candidate_board = make_move(root_board, col, current_player)
-        if candidate_board == best_move.board:
+        if candidate_board == best_move_node.board:
             return col
     
     return random.choice(get_valid_moves(root_board))
 
 def find_immediate_win_or_block(board, current_player):
     """
-    Check if current_player can immediately win, or if the opponent can immediately win next turn.
-    Return a column if found; otherwise return None.
+    Check if current_player can immediately win,
+    or if the opponent can immediately win next turn (then block).
     """
-    # Immediate win for current_player
+    # Immediate win
     for col in get_valid_moves(board):
         temp_board = make_move(board, col, current_player)
         if check_winner(temp_board, current_player):
             return col
     
-    # Block opponent's immediate win
+    # Block opponent
     opponent = get_next_player(current_player)
     for col in get_valid_moves(board):
         temp_board = make_move(board, col, opponent)
         if check_winner(temp_board, opponent):
             return col
-
+    
     return None
 
 def ai_move(board, current_player):
     """
-    Decide the AI's move:
-    1. Check for immediate win or immediate threat to block.
-    2. Otherwise, use MCTS.
+    Decide AI move:
+    1. Check immediate win/block
+    2. Otherwise use MCTS
     """
     col = find_immediate_win_or_block(board, current_player)
     if col is not None:
         return col
-    # Otherwise, use MCTS
-    print('Using MCTS...')
     return mcts(board, current_player, simulations=300, time_limit=1.0)
-
-def main():
-    # Initialize empty board
-    board = [["." for _ in range(COLS)] for _ in range(ROWS)]
-    
-    # Ask the human if they want to go first
-    first_input = input("Do you want to go first? (y/n): ").strip().lower()
-    if first_input == "y":
-        human_player = "R"
-        ai_player = "Y"
-        current_player = "R"
-    else:
-        human_player = "Y"
-        ai_player = "R"
-        current_player = "R" if first_input != "y" else "Y"  # or simply "R"
-    
-    print_board(board)
-    
-    while True:
-        if current_player == human_player:
-            # Human turn
-            valid_moves = get_valid_moves(board)
-            if not valid_moves:
-                print("It's a draw!")
-                break
-            move_str = input(f"Your turn ({human_player}). Choose a column [1-{COLS}]: ")
-            try:
-                move = int(move_str) - 1
-                if move not in valid_moves:
-                    print("Invalid move. Try again.")
-                    continue
-            except ValueError:
-                print("Invalid input. Please enter a column number.")
-                continue
-            
-            board = make_move(board, move, human_player)
-            print_board(board)
-            
-            if check_winner(board, human_player):
-                print("You win! Congratulations!")
-                break
-            
-            current_player = ai_player
-        
-        else:
-            # AI turn
-            valid_moves = get_valid_moves(board)
-            if not valid_moves:
-                print("It's a draw!")
-                break
-            
-            col = ai_move(board, ai_player)
-            board = make_move(board, col, ai_player)
-            if ai_player == "R":
-                # print red emoji
-                print(f"AI 🔴 plays column {col+1}.\n")
-            else:
-                # print yellow emoji
-                print(f"AI 🟡 plays column {col+1}.\n")
-                
-            # print(f"AI ({ai_player}) plays column {col+1}.\n")
-            print_board(board)
-            
-            if check_winner(board, ai_player):
-                print("AI wins! Better luck next time.")
-                break
-            
-            current_player = human_player
-        
-        # Check for draw
-        if is_board_full(board):
-            print("It's a draw!")
-            break
-
-if __name__ == "__main__":
-    main()
