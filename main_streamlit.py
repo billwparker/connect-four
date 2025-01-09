@@ -65,9 +65,8 @@ def main(col1, col2, col3):
         st.session_state.game_started = False
 
     # Allow user to reset the game at any point
-    with col1:
+    with col3:
       if st.session_state.game_started:    
-        with col3:
           if st.button("Reset Game"):
               reset_game_state()
               st.session_state.game_started = False

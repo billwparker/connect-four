@@ -235,4 +235,5 @@ def ai_move(board, current_player):
     col = find_immediate_win_or_block(board, current_player)
     if col is not None:
         return col
+      
     return mcts(board, current_player, simulations=300, time_limit=1.0)
