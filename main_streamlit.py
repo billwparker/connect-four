@@ -111,7 +111,7 @@ def main(col1, col2, col3):
             st.write(f'Level: {st.session_state.difficulty}')
         board = st.session_state.board
         display_board(board, col1)
-
+                
         if st.session_state.game_over:
             with col1:
               if st.session_state.winner == "Human":
@@ -218,6 +218,8 @@ def main(col1, col2, col3):
                 else:
                     st.session_state.current_player = human_player
                 st.rerun()
+                
+                
                                 
 if __name__ == "__main__":
   
@@ -234,6 +236,6 @@ if __name__ == "__main__":
     
     st.divider()
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
   
     main(col1, col2, col3)
