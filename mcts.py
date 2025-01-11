@@ -226,14 +226,30 @@ def find_immediate_win_or_block(board, current_player):
     
     return None
 
-def ai_move(board, current_player):
+def ai_move(board, current_player, difficulty):
     """
     Decide AI move:
     1. Check immediate win/block
     2. Otherwise use MCTS
     """
-    col = find_immediate_win_or_block(board, current_player)
+    
+    # Difficulty is a value between 1 and 5, If values are between 1 and 4, there is a chance of random move
+    random_difficulty = random.random()
+    # print(random_difficulty)
+    if (difficulty == 1 and random_difficulty < 0.2) or \
+       (difficulty == 2 and random_difficulty < 0.15) or \
+       (difficulty == 3 and random_difficulty < 0.10) or \
+       (difficulty == 4 and random_difficulty < 0.05):
+      
+      # print('random move')
+      return random.choice(get_valid_moves(board))
+        
+    if difficulty == 5:
+      col = find_immediate_win_or_block(board, current_player)
+    else:
+      col = None
+                  
     if col is not None:
         return col
-      
+                          
     return mcts(board, current_player, simulations=300, time_limit=1.0)
